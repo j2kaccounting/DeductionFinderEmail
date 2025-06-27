@@ -31,13 +31,11 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
-        <!-- Header -->
         <div class="text-center">
             <h1 class="text-3xl font-bold text-gray-800 dark:text-white">AI Deduction Finder</h1>
             <p id="subheading" class="text-gray-500 dark:text-gray-400 mt-2">Enter your passcode to begin.</p>
         </div>
 
-        <!-- Passcode Section -->
         <div id="passcodeSection" class="space-y-4">
              <div>
                 <label for="passcode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Passcode</label>
@@ -50,7 +48,6 @@
         </div>
 
 
-        <!-- Main App Form (Initially Hidden) -->
         <form id="deductionForm" class="hidden space-y-4">
             <div>
                 <label for="clientName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client's Full Name</label>
@@ -67,7 +64,6 @@
             </button>
         </form>
         
-        <!-- Result Section -->
         <div id="resultSection" class="hidden space-y-4 pt-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Generated Email Body</h2>
@@ -152,26 +148,35 @@
             emailBody.classList.add('hidden');
             copyButton.classList.add('hidden');
 
+            const staticPreamble = `Hi ${clientFirstName},
+
+Please see the initial details required for the preparation and lodgement of your 2025 Individual Tax Return (ITR):
+
+1. Tax File Number (TFN)
+2. Date of Birth
+3. Passport (if you are on a temporary visa) or an Australian Driver's Licence
+4. Current residential address
+5. Current mobile number
+
+`;
 
             // Construct the prompt for Gemini
             const prompt = `
-                As a professional tax agent from J2K Accounting, create an email body for our client, ${clientFirstName}, who works as a/an ${occupation}.
+                As a professional tax agent from J2K Accounting, create an email body for our client who works as a/an ${occupation}.
                 The email must follow this structure EXACTLY and be formatted as plain text:
 
-                1.  Start with the greeting: "Hi ${clientFirstName},"
+                1.  Start with this exact introductory paragraph: "As your tax agent, I'm reaching out to provide some general information regarding work-related expenses you may be able to claim as a ${occupation} when lodging your tax return."
 
-                2.  Follow with this exact introductory paragraph: "As your tax agent, I'm reaching out to provide some general information regarding work-related expenses you may be able to claim as a ${occupation} when lodging your tax return."
+                2.  Create a numbered list of 5-6 key potential tax deductions relevant to a/an "${occupation}". For each numbered item, provide a clear heading for the deduction category, followed by a short explanation with examples. Mention common things that can't be claimed where relevant (e.g., travel from home to work). The format for each item should be like "1. Tools & Equipment: Explanation and examples."
 
-                3.  Create a numbered list of 5-6 key potential tax deductions relevant to a/an "${occupation}". For each numbered item, provide a clear heading for the deduction category, followed by a short explanation with examples. Mention common things that can't be claimed where relevant (e.g., travel from home to work). The format for each item should be like "1. Tools & Equipment: Explanation and examples."
-
-                4.  After the numbered list, include a section titled "Important Reminders for Your Records:". Under this heading, include these three points, exactly as written, with each point on a new line:
+                3.  After the numbered list, include a section titled "Important Reminders for Your Records:". Under this heading, include these three points, exactly as written, with each point on a new line:
                 - You can only claim expenses for which you were not reimbursed by your employer.
-                - You must have a record to prove your expense (e.g., a receipt or invoice).
+                - You must have a record to prove your expense. While a formal receipt or invoice is best, a bank or credit card statement that clearly shows the supplier, date, and amount can often be used as alternative evidence.
                 - The expense must be directly related to earning your income.
 
-                5.  Conclude with this exact closing paragraph: "Please gather all relevant documentation, and we can discuss these in detail during our next consultation to ensure we accurately claim everything you're entitled to."
+                4.  Conclude with this exact closing paragraph: "Please gather all relevant documentation, and we can discuss these in detail during our next consultation to ensure we accurately claim everything you're entitled to."
 
-                The entire output must be a single, ready-to-send email body without any markdown like asterisks.
+                The entire output must be a single block of text starting with "As your tax agent...". Do not include a greeting or any text before that. Do not use markdown like asterisks.
             `;
 
             try {
@@ -204,8 +209,10 @@
                     throw new Error("Invalid response structure from the API.");
                 }
 
-                // Display the result
-                emailBody.value = generatedText.trim();
+                // Combine the static preamble with the AI-generated body
+                const finalEmail = staticPreamble + "\n" + generatedText.trim();
+                emailBody.value = finalEmail;
+
                 emailBody.classList.remove('hidden');
                 copyButton.classList.remove('hidden');
 
