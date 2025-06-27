@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Deduction Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #emailBody {
+             white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">AI Deduction Finder</h1>
+            <p id="subheading" class="text-gray-500 dark:text-gray-400 mt-2">Enter your passcode to begin.</p>
+        </div>
+
+        <!-- Passcode Section -->
+        <div id="passcodeSection" class="space-y-4">
+             <div>
+                <label for="passcode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Passcode</label>
+                <input type="password" id="passcode" name="passcode" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-3" placeholder="Enter your passcode">
+            </div>
+            <button id="startButton" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900">
+                Start
+            </button>
+            <div id="passcodeError" class="hidden p-3 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-md text-sm"></div>
+        </div>
+
+
+        <!-- Main App Form (Initially Hidden) -->
+        <form id="deductionForm" class="hidden space-y-4">
+            <div>
+                <label for="clientName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client's Full Name</label>
+                <input type="text" id="clientName" name="clientName" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-3" placeholder="e.g., Jane Doe">
+            </div>
+
+            <div>
+                <label for="occupation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client's Occupation</label>
+                <input type="text" id="occupation" name="occupation" class="mt-1 block w-full bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-3" placeholder="e.g., Freelance Graphic Designer">
+            </div>
+
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900">
+                Generate Email
+            </button>
+        </form>
+        
+        <!-- Result Section -->
+        <div id="resultSection" class="hidden space-y-4 pt-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Generated Email Body</h2>
+                 <button id="copyButton" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900">
+                    Copy Text
+                </button>
+            </div>
+           
+            <div id="loader" class="hidden flex items-center justify-center py-10">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+                <p class="ml-4 text-gray-500 dark:text-gray-400">Generating deductions...</p>
+            </div>
+            
+            <div id="error" class="hidden p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-md"></div>
+            
+            <textarea id="emailBody" readonly class="w-full h-96 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm" placeholder="Your generated email will appear here..."></textarea>
+            
+             <p class="text-xs text-center text-gray-400 dark:text-gray-500 pt-2">
+                Disclaimer: This is an AI-generated list for informational purposes only. Consult with a qualified tax professional for financial advice.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const passcodeSection = document.getElementById('passcodeSection');
+        const passcodeError = document.getElementById('passcodeError');
+        const startButton = document.getElementById('startButton');
+        const subheading = document.getElementById('subheading');
+
+        const deductionForm = document.getElementById('deductionForm');
+        const resultSection = document.getElementById('resultSection');
+        const emailBody = document.getElementById('emailBody');
+        const loader = document.getElementById('loader');
+        const errorDiv = document.getElementById('error');
+        const copyButton = document.getElementById('copyButton');
+
+        const CORRECT_PASSCODE = '022115';
+
+        // Event listener for the start button
+        startButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            const passcode = document.getElementById('passcode').value;
+
+            if (passcode === CORRECT_PASSCODE) {
+                passcodeSection.classList.add('hidden');
+                deductionForm.classList.remove('hidden');
+                subheading.textContent = 'Generate potential tax deductions for any occupation.';
+            } else {
+                passcodeError.textContent = 'Incorrect passcode. Please try again.';
+                passcodeError.classList.remove('hidden');
+            }
+        });
+
+
+        // Event listener for the main deduction form
+        deductionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // The API key is not taken from user input for security.
+            // Leave this blank. The execution environment will provide the key.
+            const apiKey = "AIzaSyAytfrcmSY77_A5C8volZx05cRVLZsR-dY"; 
+
+            // Get form values
+            const clientName = document.getElementById('clientName').value.trim();
+            const occupation = document.getElementById('occupation').value.trim();
+
+            // Basic validation
+            if (!clientName || !occupation) {
+                showError("Please fill out all fields.");
+                return;
+            }
+
+            // Extract first name for a personal touch
+            const clientFirstName = clientName.split(' ')[0];
+
+            // Show result section and loader
+            resultSection.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            emailBody.value = ''; // Clear previous results
+            errorDiv.classList.add('hidden');
+            emailBody.classList.add('hidden');
+            copyButton.classList.add('hidden');
+
+
+            // Construct the prompt for Gemini
+            const prompt = `
+                As a professional tax agent from J2K Accounting, create an email body for our client, ${clientFirstName}, who works as a/an ${occupation}.
+                The email must follow this structure EXACTLY and be formatted as plain text:
+
+                1.  Start with the greeting: "Hi ${clientFirstName},"
+
+                2.  Follow with this exact introductory paragraph: "As your tax agent, I'm reaching out to provide some general information regarding work-related expenses you may be able to claim as a ${occupation} when lodging your tax return."
+
+                3.  Create a numbered list of 5-6 key potential tax deductions relevant to a/an "${occupation}". For each numbered item, provide a clear heading for the deduction category, followed by a short explanation with examples. Mention common things that can't be claimed where relevant (e.g., travel from home to work). The format for each item should be like "1. Tools & Equipment: Explanation and examples."
+
+                4.  After the numbered list, include a section titled "Important Reminders for Your Records:". Under this heading, include these three points, exactly as written, with each point on a new line:
+                - You can only claim expenses for which you were not reimbursed by your employer.
+                - You must have a record to prove your expense (e.g., a receipt or invoice).
+                - The expense must be directly related to earning your income.
+
+                5.  Conclude with this exact closing paragraph: "Please gather all relevant documentation, and we can discuss these in detail during our next consultation to ensure we accurately claim everything you're entitled to."
+
+                The entire output must be a single, ready-to-send email body without any markdown like asterisks.
+            `;
+
+            try {
+                // Call the Gemini API
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                let generatedText = "Could not parse the response from the AI. Please try again.";
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    generatedText = result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Invalid response structure from the API.");
+                }
+
+                // Display the result
+                emailBody.value = generatedText.trim();
+                emailBody.classList.remove('hidden');
+                copyButton.classList.remove('hidden');
+
+            } catch (err) {
+                console.error('API Call Failed:', err);
+                showError(`Failed to generate deductions. Please check your network connection or try again later. Error: ${err.message}`);
+            } finally {
+                // Hide loader
+                loader.classList.add('hidden');
+            }
+        });
+        
+        // Event listener for the copy button
+        copyButton.addEventListener('click', () => {
+            emailBody.select();
+            // Using document.execCommand for wider compatibility within iframe environments
+            try {
+                document.execCommand('copy');
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy Text';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                // Avoid using alert()
+                copyButton.textContent = 'Copy Failed';
+            }
+        });
+        
+        // Function to display errors in the main section
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            resultSection.classList.remove('hidden'); // Ensure result section is visible to show error
+            emailBody.classList.add('hidden');
+            copyButton.classList.add('hidden');
+        }
+    </script>
+
+</body>
+</html>
