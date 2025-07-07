@@ -209,8 +209,28 @@ Please see the initial details required for the preparation and lodgement of you
                     throw new Error("Invalid response structure from the API.");
                 }
 
-                // Combine the static preamble with the AI-generated body
-                const finalEmail = staticPreamble + "\n" + generatedText.trim();
+                const engagementDisclaimer = `
+
+Engagement Disclaimer:
+By submitting the above requested details, you acknowledge and agree that this serves as confirmation of your engagement with J2K Accounting for the preparation of your 2025 ITR.
+
+Once we begin working on your return—reviewing your details, assessing claims, and preparing estimates, our service is considered engaged and the relevant fee will apply, regardless of whether the return is lodged or not.
+
+Please understand that time and expertise are dedicated the moment we begin handling your information.
+We love helping our clients, but we also value our time and resources, thanks for understanding.
+
+We appreciate your cooperation and look forward to assisting you with your tax return.
+
+Services and Fees:
+Standard Individual Tax Return – $80
+International Student – $65
+Additional with ABN Income – +$65
+Additional with Rental Property – +$65
+
+Let me know if you have any questions! Happy to help 😊`;
+
+                // Combine the static preamble, AI-generated body, and the disclaimer
+                const finalEmail = staticPreamble + "\n" + generatedText.trim() + engagementDisclaimer;
                 emailBody.value = finalEmail;
 
                 emailBody.classList.remove('hidden');
